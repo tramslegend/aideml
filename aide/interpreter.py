@@ -135,7 +135,16 @@ class Interpreter:
     ) -> None:
         self.child_proc_setup(result_outq)
 
-        global_scope: dict = {}
+        # `exec` with an empty globals dict leaves `__name__` to resolve through
+        # builtins, where it is "builtins" -- so the standard
+        # `if __name__ == "__main__":` guard is never true and the script's body
+        # silently never runs (clean exit, no output, no exception). Mirror the
+        # semantics of running the file directly. See #62.
+        global_scope: dict = {
+            "__name__": "__main__",
+            "__file__": self.agent_file_name,
+            "__builtins__": __builtins__,
+        }
         while True:
             code = code_inq.get()
             os.chdir(str(self.working_dir))
