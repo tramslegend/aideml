@@ -24,12 +24,15 @@ class MetricValue(DataClassJsonMixin):
 
     def __gt__(self, other) -> bool:
         """True if self is a _better_ (not necessarily larger) metric value than other"""
+        if not isinstance(other, MetricValue):
+            return NotImplemented
         if self.value is None:
             return False
         if other.value is None:
             return True
 
-        assert type(self) is type(other) and (self.maximize == other.maximize)
+        if self.maximize != other.maximize:
+            return NotImplemented
 
         if self.value == other.value:
             return False
@@ -38,6 +41,8 @@ class MetricValue(DataClassJsonMixin):
         return comp if self.maximize else not comp  # type: ignore
 
     def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, MetricValue):
+            return NotImplemented
         return self.value == other.value
 
     def __repr__(self) -> str:
